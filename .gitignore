@@ -4,6 +4,7 @@
 !/.nojekyll
 !/index.html
 !/data-herkomst.html
+!/assets/
 !/data/
 /data/*
 !/data/kantoren.js

@@ -52,27 +52,38 @@
 </style>
 </head>
 <body>
-<!-- WACHTWOORDGATE (client-side; houdt toevallige bezoekers tegen, geen echte beveiliging) -->
+<!-- WACHTWOORDGATE (Myreas-stijl; client-side, houdt toevallige bezoekers tegen, geen echte beveiliging) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Poppins:wght@400&display=swap">
 <style>
-  #gate{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:16px;background:#0B3B8C;font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif}
-  #gate .gt{color:#fff;font-size:22px;font-weight:600;text-align:center}
-  #gate .gt small{display:block;font-size:13px;font-weight:400;opacity:.8;margin-top:4px}
-  #gate form{background:#fff;border-radius:12px;padding:26px;width:100%;max-width:340px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-  #gate label{display:block;font-size:13px;color:#5B6678;margin-bottom:8px}
-  #gate input{width:100%;padding:11px 12px;border:1px solid #E2E6EC;border-radius:8px;font-size:15px;outline:none}
-  #gate input:focus{border-color:#0B3B8C}
-  #gate input.err{border-color:#B3261E}
-  #gate button{width:100%;margin-top:12px;padding:11px;border:0;border-radius:8px;background:#F08A00;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
-  #gate .msg{min-height:18px;margin-top:8px;font-size:12px;color:#B3261E}
+  #gate{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;background:#1B2D4F;font-family:"Open Sans",Arial,sans-serif;color:#1B2D4F;overflow-y:auto}
+  #gate .gbox{background:#fff;width:100%;max-width:420px;padding:44px 40px 36px}
+  #gate .glogo{display:block;width:180px;height:auto;margin:0 0 32px}
+  #gate h1{font-family:Arial,Helvetica,sans-serif;font-weight:400;font-size:1.9rem;line-height:1.3;margin:0 0 6px;color:#1B2D4F}
+  #gate h1 span{color:#70B7A4}
+  #gate .gmeta{font-family:"Poppins",Arial,sans-serif;font-size:.95rem;letter-spacing:.01em;color:#6B7280;margin:0 0 28px;line-height:1.6}
+  #gate label{display:block;font-size:.95rem;margin-bottom:8px}
+  #gate input{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #D1D5DB;border-radius:10px;font:inherit;font-size:1rem;color:#1B2D4F;outline:none;transition:border-color .2s ease}
+  #gate input:focus{border-color:#70B7A4}
+  #gate input.err{border-color:#1B2D4F}
+  #gate button{margin-top:18px;padding:12px 40px;border:0;border-radius:999px;background:#70B7A4;color:#fff;font:inherit;font-size:1rem;font-weight:600;cursor:pointer;transition:background .2s ease}
+  #gate button:hover{background:#5DA592}
+  #gate .gmsg{min-height:1.6em;margin-top:12px;font-size:.9rem;color:#1B2D4F}
+  #gate .gfoot{margin-top:20px;padding-top:16px;border-top:1px solid #E5E7EB;font-family:"Poppins",Arial,sans-serif;font-size:.8rem;color:#6B7280}
+  @media (max-width:480px){#gate .gbox{padding:32px 24px 28px}#gate .glogo{width:150px}}
 </style>
 <div id="gate">
-  <div class="gt">Distributieradar België<small>Beveiligde pagina</small></div>
-  <form id="gateForm" autocomplete="off">
-    <label for="gatePw">Wachtwoord</label>
-    <input type="password" id="gatePw" autofocus>
-    <button type="submit">Toegang</button>
-    <div class="msg" id="gateMsg"></div>
-  </form>
+  <div class="gbox">
+    <img class="glogo" src="assets/myreas-logo.png" alt="Myreas — Colruyt Group">
+    <h1>Distributieradar België<span>.</span></h1>
+    <p class="gmeta">Deze pagina is beveiligd. Geef het wachtwoord in om verder te gaan.</p>
+    <form id="gateForm" autocomplete="off">
+      <label for="gatePw">Wachtwoord</label>
+      <input type="password" id="gatePw" autofocus>
+      <button type="submit">Toegang</button>
+      <div class="gmsg" id="gateMsg"></div>
+    </form>
+    <div class="gfoot">Myreas · Colruyt Group</div>
+  </div>
 </div>
 <script>
 (function(){
@@ -86,7 +97,7 @@
     var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(inp.value));
     var h=Array.from(new Uint8Array(buf)).map(function(x){return x.toString(16).padStart(2,'0')}).join('');
     if(h===HASH){try{sessionStorage.setItem(KEY,HASH)}catch(e){}gate.remove();window.dispatchEvent(new Event('resize'))}
-    else{inp.classList.add('err');inp.value='';document.getElementById('gateMsg').textContent='Onjuist wachtwoord.'}
+    else{inp.classList.add('err');inp.value='';document.getElementById('gateMsg').textContent='Onjuist wachtwoord. Probeer opnieuw.'}
   });
 })();
 </script>
