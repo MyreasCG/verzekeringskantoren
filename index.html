@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Distributieradar België — P&amp;V Groep</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root{
+    --pv:#0B3B8C; --vivium:#C4007A; --prospect:#F08A00; --comp:#7C8798;
+    --ink:#14213D; --muted:#5B6678; --line:#E2E6EC; --bg:#F5F7FA; --card:#fff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:14px;display:flex;flex-direction:column}
+  header{background:var(--pv);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.2px}
+  header h1 small{display:block;font-size:12px;font-weight:400;opacity:.8;margin-top:2px}
+  .kpis{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
+  .kpi{background:rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;min-width:104px}
+  .kpi b{display:block;font-size:19px;font-variant-numeric:tabular-nums;line-height:1.15}
+  .kpi span{font-size:11px;opacity:.85}
+  .kpi.hl{background:#fff;color:var(--ink)}
+  .kpi.hl b{color:var(--prospect)}
+  main{flex:1;display:grid;grid-template-columns:300px 1fr 360px;min-height:0}
+  aside{background:var(--card);overflow-y:auto;padding:14px}
+  aside.left{border-right:1px solid var(--line)}
+  aside.right{border-left:1px solid var(--line);padding:0;display:flex;flex-direction:column}
+  #map{min-height:320px;background:#dfe5ec}
+  h2{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:16px 0 6px}
+  h2:first-child{margin-top:0}
+  .presets{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .presets button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 6px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--ink);text-align:left;line-height:1.25}
+  .presets button small{display:block;color:var(--muted);font-size:11px}
+  .presets button.on{border-color:var(--pv);background:#EAF0FB;box-shadow:inset 0 0 0 1px var(--pv)}
+  input[type=search],select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+  label.chk{display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer}
+  label.chk .n{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+  label.chk.off{color:#A5ADBA;cursor:default}
+  .grp{font-size:11.5px;color:var(--muted);margin:8px 0 2px;font-weight:600}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:6px 0}
+  .seg button{flex:1;border:0;background:#fff;padding:6px;font:inherit;font-size:12px;cursor:pointer;color:var(--muted)}
+  .seg button.on{background:var(--pv);color:#fff}
+  .link{background:none;border:0;color:var(--pv);cursor:pointer;font:inherit;font-size:12px;padding:0;text-decoration:underline}
+  .tabs{display:flex;border-bottom:1px solid var(--line)}
+  .tabs button{flex:1;border:0;background:#fff;padding:11px;font:inherit;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent}
+  .tabs button.on{color:var(--pv);border-bottom-color:var(--pv);font-weight:600}
+  .pane{padding:14px;overflow-y:auto;flex:1;display:none}
+  .pane.on{display:block}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th,td{padding:5px 4px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  th{font-size:11px;color:var(--muted);font-weight:600}
+  tbody tr{cursor:pointer}
+  tbody tr:hover,tbody tr.on{background:#EAF0FB}
+  .bar{display:grid;grid-template-columns:92px 1fr 46px;align-items:center;gap:8px;margin:3px 0;font-size:12.5px}
+  .bar i{display:block;height:10px;border-radius:3px;background:var(--comp)}
+  .bar.own i{background:var(--pv)} .bar.viv i{background:var(--vivium)}
+  .bar span:last-child{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+  .item{padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer}
+  .item:hover b{color:var(--pv)}
+  .item small{color:var(--muted);display:block}
+  .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+  .chip{font-size:11px;padding:2px 7px;border-radius:10px;background:#EEF1F5;color:#3C4658}
+  .chip.pv{background:var(--pv);color:#fff} .chip.viv{background:var(--vivium);color:#fff}
+  .legend{background:#fff;border-radius:8px;padding:8px 10px;box-shadow:0 1px 5px rgba(0,0,0,.25);font-size:12px;line-height:1.7}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;border:1px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+  .note{font-size:11.5px;color:var(--muted);line-height:1.45}
+  .pop b{font-size:14px} .pop .tag{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .pop a{color:var(--pv)}
+  .hint{background:#FFF4E0;border-left:3px solid var(--prospect);padding:6px 8px;margin-top:8px;font-size:12px;border-radius:0 6px 6px 0}
+  @media(max-width:1100px){main{grid-template-columns:1fr;grid-template-rows:auto 60vh auto;overflow-y:auto}aside{overflow:visible}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Distributieradar België<small>Verzekeringskantoren en hun merken — standpunt P&amp;V Groep (P&amp;V · Vivium)</small></h1>
+  <div class="kpis">
+    <div class="kpi"><b id="k-total">–</b><span>kantoren in selectie</span></div>
+    <div class="kpi"><b id="k-pv">–</b><span>P&amp;V-agenten</span></div>
+    <div class="kpi"><b id="k-viv">–</b><span>Vivium-makelaars</span></div>
+    <div class="kpi hl"><b id="k-pros">–</b><span>makelaars zonder Vivium</span></div>
+    <div class="kpi"><b id="k-pen">–</b><span>Vivium-penetratie makelaars</span></div>
+  </div>
+</header>
+<main>
+  <aside class="left">
+    <h2>Perspectief</h2>
+    <div class="presets" id="presets">
+      <button data-p="all" class="on">Hele markt<small>alle kantoren</small></button>
+      <button data-p="own">Ons netwerk<small>P&amp;V + Vivium</small></button>
+      <button data-p="pros">Prospecten<small>makelaars zonder Vivium</small></button>
+      <button data-p="comp">Concurrentie<small>zonder ons netwerk</small></button>
+    </div>
+
+    <h2>Zoeken</h2>
+    <input type="search" id="q" placeholder="Naam, gemeente of postcode…">
+
+    <h2>Provincie</h2>
+    <select id="prov"><option value="">Heel België</option></select>
+
+    <h2>Kanaal</h2>
+    <div id="channels"></div>
+
+    <h2>Merken <button class="link" id="brands-all" style="float:right;text-transform:none;letter-spacing:0">alles aan/uit</button></h2>
+    <div class="seg" id="mode">
+      <button data-m="any" class="on">minstens één</button>
+      <button data-m="all">alle gekozen</button>
+    </div>
+    <div id="brands"></div>
+
+    <h2>Export</h2>
+    <button class="link" id="csv">Selectie downloaden als CSV</button>
+    <p class="note" id="srcnote"></p>
+  </aside>
+
+  <div id="map"></div>
+
+  <aside class="right">
+    <div class="tabs">
+      <button data-t="ins" class="on">Inzichten</button>
+      <button data-t="list">Lijst (<span id="listn">0</span>)</button>
+    </div>
+    <div class="pane on" id="pane-ins">
+      <h2>Vivium bij makelaars, per provincie</h2>
+      <table>
+        <thead><tr><th>Provincie</th><th title="P&V-agenten">P&amp;V</th><th title="Makelaarskantoren">Makel.</th><th title="Makelaars met Vivium">Vivium</th><th>%</th></tr></thead>
+        <tbody id="provtable"></tbody>
+      </table>
+      <p class="note">Klik op een provincie om te filteren. % = aandeel van de makelaarskantoren dat Vivium aanbiedt. Lage penetratie met veel makelaars = groeipotentieel.</p>
+      <h2>Kantoren per merk (in selectie)</h2>
+      <div id="brandbars"></div>
+      <h2>Vivium deelt de makelaar met…</h2>
+      <div id="shared"></div>
+      <p class="note">Aandeel van de Vivium-makelaars in de selectie dat ook het concurrerende merk aanbiedt.</p>
+    </div>
+    <div class="pane" id="pane-list"></div>
+  </aside>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="data/kantoren.js"></script>
+<script>
+(function(){
+  const DATA = (window.KANTOREN && window.KANTOREN.offices) || [];
+  const META = (window.KANTOREN && window.KANTOREN.meta) || {};
+  const OWN = ['P&V','Vivium'];
+  const ALLBRANDS = ['P&V','Vivium','AG','AXA','Baloise','Allianz','KBC','Belfius','DVV','Ethias','ING','NN','DKV','DAS'];
+  const BRANDS = ALLBRANDS.filter(b=>DATA.some(o=>o.brands.includes(b)));
+  const NODATA = {'Allianz':'locator niet uitleesbaar','DKV':'geen eigen kantoren','DAS':'geen eigen kantoren','Yuzzu':'enkel online','Belfius Direct':'enkel online'};
+  const CH = {agent:'Exclusief agent',makelaar:'Makelaar',bank:'Bankkantoor',direct:'Eigen kantoor (direct)'};
+  const COL = {pv:'#0B3B8C',viv:'#C4007A',pros:'#F08A00',comp:'#7C8798'};
+  const fmt = n => n.toLocaleString('nl-BE');
+  const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const safeUrl = u => /^https?:\/\//i.test(u||'') ? u : (u ? 'https://'+u : '');
+
+  const state = {brands:new Set(BRANDS), mode:'any', ch:new Set(Object.keys(CH)), prov:'', q:[], preset:'all'};
+
+  function kind(o){
+    if(o.brands.includes('P&V') && o.ch==='agent') return 'pv';
+    if(o.brands.includes('Vivium')) return 'viv';
+    if(o.ch==='makelaar') return 'pros';
+    return 'comp';
+  }
+  // zoeken negeert hoofdletters, accenten en leestekens ("torcq de wilde" vindt "Torcq-De Wilde & Partners")
+  const norm = s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  DATA.forEach((o,i)=>{o.i=i;o.k=kind(o);o.s=norm([o.name,o.street,o.city,o.pc].filter(Boolean).join(' '));});
+
+  // ---- map
+  const map = L.map('map',{preferCanvas:true,zoomControl:true}).setView([50.55,4.55],8);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bijdragers'
+  }).addTo(map);
+  document.querySelector('.leaflet-tile-pane').style.filter='grayscale(.85) opacity(.75)';
+  const renderer = L.canvas({padding:.5});
+  const layer = L.layerGroup().addTo(map);
+  const order = {comp:0,pros:1,viv:2,pv:3};
+  const rad = (own,z)=>(z<=8?2.6:z<=10?3.6:z<=12?5:6.5)+(own?1:0);
+  const markers = DATA.map(o=>{
+    if(o.lat==null||o.lng==null) return null;
+    const own = o.k==='pv'||o.k==='viv';
+    const m = L.circleMarker([o.lat,o.lng],{renderer,radius:rad(own,8),color:'#fff',weight:.6,fillColor:COL[o.k],fillOpacity:own?.95:.8});
+    m.bindPopup(()=>popup(o),{maxWidth:300});
+    return m;
+  });
+  map.on('zoomend',()=>{const z=map.getZoom();DATA.forEach(o=>{const m=markers[o.i];if(m)m.setRadius(rad(o.k==='pv'||o.k==='viv',z));});});
+  const legend = L.control({position:'bottomleft'});
+  legend.onAdd = ()=>{const d=L.DomUtil.create('div','legend');d.innerHTML=
+    `<span class="dot" style="background:${COL.pv}"></span>P&amp;V-agent<br>`+
+    `<span class="dot" style="background:${COL.viv}"></span>Makelaar met Vivium<br>`+
+    `<span class="dot" style="background:${COL.pros}"></span>Makelaar zonder Vivium<br>`+
+    `<span class="dot" style="background:${COL.comp}"></span>Concurrent (agent, bank, direct)`;return d;};
+  legend.addTo(map);
+
+  function chips(o){return '<div class="chips">'+o.brands.map(b=>`<span class="chip ${b==='P&V'?'pv':b==='Vivium'?'viv':''}">${esc(b)}</span>`).join('')+'</div>';}
+  function popup(o){
+    let h=`<div class="pop"><span class="tag">${esc(CH[o.ch]||o.ch)}</span><br><b>${esc(o.name)}</b><br>${esc(o.street||'')}<br>${esc(o.pc||'')} ${esc(o.city||'')}`;
+    h+=chips(o);
+    if(o.tel) h+=`<div style="margin-top:6px">☎ ${esc(o.tel)}</div>`;
+    if(o.web) h+=`<div><a href="${esc(safeUrl(o.web))}" target="_blank" rel="noopener">website</a></div>`;
+    if(o.k==='pros') h+=`<div class="hint">Biedt ${o.brands.length} concurrerend${o.brands.length===1?'':'e'} merk${o.brands.length===1?'':'en'} aan, maar geen Vivium.</div>`;
+    if(o.src) h+=`<div class="note" style="margin-top:6px">Bron: ${esc(o.src.join(', '))}</div>`;
+    return h+'</div>';
+  }
+
+  // ---- filter UI
+  const count = (f)=>DATA.reduce((n,o)=>n+(f(o)?1:0),0);
+  const elB = document.getElementById('brands');
+  function brandRow(b){const n=count(o=>o.brands.includes(b));return `<label class="chk"><input type="checkbox" data-b="${esc(b)}" checked>${esc(b)}<span class="n">${fmt(n)}</span></label>`;}
+  elB.innerHTML = '<div class="grp">P&amp;V Groep</div>'+OWN.map(brandRow).join('')+
+    '<div class="grp">Concurrenten</div>'+BRANDS.filter(b=>!OWN.includes(b)).map(brandRow).join('')+
+    '<div class="grp">Niet op de kaart</div>'+Object.keys(NODATA).filter(b=>!BRANDS.includes(b)).map(b=>`<label class="chk off"><input type="checkbox" disabled>${esc(b)}<span class="n">${NODATA[b]}</span></label>`).join('');
+  document.getElementById('channels').innerHTML = Object.keys(CH).map(c=>`<label class="chk"><input type="checkbox" data-c="${c}" checked>${CH[c]}<span class="n">${fmt(count(o=>o.ch===c))}</span></label>`).join('');
+  const provs = [...new Set(DATA.map(o=>o.prov).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'nl'));
+  const elP = document.getElementById('prov');
+  elP.innerHTML += provs.map(p=>`<option>${esc(p)}</option>`).join('');
+
+  function syncChecks(){
+    elB.querySelectorAll('input[data-b]').forEach(i=>i.checked=state.brands.has(i.dataset.b));
+    document.querySelectorAll('input[data-c]').forEach(i=>i.checked=state.ch.has(i.dataset.c));
+    document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on',b.dataset.p===state.preset));
+    document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===state.mode));
+    elP.value=state.prov;
+  }
+  elB.addEventListener('change',e=>{const b=e.target.dataset.b;if(!b)return;e.target.checked?state.brands.add(b):state.brands.delete(b);state.preset='';render();});
+  document.getElementById('channels').addEventListener('change',e=>{const c=e.target.dataset.c;e.target.checked?state.ch.add(c):state.ch.delete(c);state.preset='';render();});
+  document.getElementById('brands-all').onclick=()=>{state.brands=state.brands.size?new Set():new Set(BRANDS);state.preset='';render();};
+  document.getElementById('mode').onclick=e=>{if(e.target.dataset.m){state.mode=e.target.dataset.m;render();}};
+  elP.onchange=()=>{state.prov=elP.value;render(true);};
+  let t;document.getElementById('q').oninput=e=>{clearTimeout(t);t=setTimeout(()=>{state.q=norm(e.target.value).split(' ').filter(w=>w&&w!=='en'&&w!=='et');render();},180);};
+  document.getElementById('presets').onclick=e=>{
+    const b=e.target.closest('button');if(!b)return;
+    state.preset=b.dataset.p;state.mode='any';state.ch=new Set(Object.keys(CH));
+    state.brands = b.dataset.p==='own'?new Set(OWN): b.dataset.p==='comp'?new Set(BRANDS.filter(x=>!OWN.includes(x))): new Set(BRANDS);
+    if(b.dataset.p==='pros') state.ch=new Set(['makelaar']);
+    render();
+  };
+  document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+    document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+b.dataset.t));};
+
+  function match(o){
+    if(!state.ch.has(o.ch)) return false;
+    if(state.prov && o.prov!==state.prov) return false;
+    if(state.q.length && !state.q.every(w=>o.s.includes(w))) return false;
+    if(state.preset==='pros' && o.k!=='pros') return false;
+    if(state.preset==='comp' && (o.k==='pv'||o.k==='viv')) return false;
+    if(!state.brands.size) return false;
+    if(state.mode==='all'){for(const b of state.brands) if(!o.brands.includes(b)) return false;return true;}
+    return o.brands.some(b=>state.brands.has(b));
+  }
+
+  let current=[];
+  function render(fit){
+    syncChecks();
+    current = DATA.filter(match);
+    layer.clearLayers();
+    current.slice().sort((a,b)=>order[a.k]-order[b.k]).forEach(o=>{const m=markers[o.i];if(m)layer.addLayer(m);});
+    if(fit){const pts=current.filter(o=>o.lat!=null).map(o=>[o.lat,o.lng]);if(pts.length)map.fitBounds(pts,{padding:[30,30],maxZoom:13});}
+    // KPIs
+    const brokers=current.filter(o=>o.ch==='makelaar');
+    const viv=brokers.filter(o=>o.brands.includes('Vivium')).length;
+    document.getElementById('k-total').textContent=fmt(current.length);
+    document.getElementById('k-pv').textContent=fmt(current.filter(o=>o.k==='pv').length);
+    document.getElementById('k-viv').textContent=fmt(viv);
+    document.getElementById('k-pros').textContent=fmt(brokers.length-viv);
+    document.getElementById('k-pen').textContent=brokers.length?Math.round(100*viv/brokers.length)+'%':'–';
+    // brand bars
+    const bc=BRANDS.map(b=>[b,current.filter(o=>o.brands.includes(b)).length]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]);
+    const mx=Math.max(1,...bc.map(x=>x[1]));
+    document.getElementById('brandbars').innerHTML=bc.map(([b,n])=>`<div class="bar ${b==='P&V'?'own':b==='Vivium'?'viv':''}"><span>${esc(b)}</span><i style="width:${Math.max(2,100*n/mx)}%"></i><span>${fmt(n)}</span></div>`).join('')||'<p class="note">Geen kantoren in de selectie.</p>';
+    // shared wallet
+    const vb=current.filter(o=>o.ch==='makelaar'&&o.brands.includes('Vivium'));
+    const sh=BRANDS.filter(b=>!OWN.includes(b)).map(b=>[b,vb.filter(o=>o.brands.includes(b)).length]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]);
+    document.getElementById('shared').innerHTML=vb.length&&sh.length?sh.map(([b,n])=>`<div class="bar"><span>${esc(b)}</span><i style="width:${Math.max(2,100*n/vb.length)}%"></i><span>${Math.round(100*n/vb.length)}%</span></div>`).join(''):'<p class="note">Geen Vivium-makelaars in de selectie.</p>';
+    // list
+    document.getElementById('listn').textContent=fmt(current.length);
+    const top=current.slice().sort((a,b)=>order[b.k]-order[a.k]||a.name.localeCompare(b.name,'nl')).slice(0,300);
+    document.getElementById('pane-list').innerHTML=top.map(o=>`<div class="item" data-i="${o.i}"><b>${esc(o.name)}</b><small>${esc(CH[o.ch])} · ${esc(o.pc||'')} ${esc(o.city||'')}</small>${chips(o)}</div>`).join('')+(current.length>300?`<p class="note">Eerste 300 van ${fmt(current.length)} getoond — verfijn de filters of download de CSV.</p>`:'');
+    document.querySelectorAll('#provtable tr').forEach(r=>r.classList.toggle('on',r.dataset.p===state.prov));
+  }
+  document.getElementById('pane-list').onclick=e=>{const it=e.target.closest('.item');if(!it)return;const o=DATA[+it.dataset.i],m=markers[o.i];if(!m)return;if(!layer.hasLayer(m))layer.addLayer(m);map.setView([o.lat,o.lng],Math.max(map.getZoom(),15));m.openPopup();};
+
+  // ---- province table (structural: whole market, independent of filters)
+  const rows=provs.map(p=>{const d=DATA.filter(o=>o.prov===p),br=d.filter(o=>o.ch==='makelaar'),v=br.filter(o=>o.brands.includes('Vivium')).length;
+    return {p,pv:d.filter(o=>o.k==='pv').length,br:br.length,v,pct:br.length?100*v/br.length:0};}).sort((a,b)=>a.pct-b.pct);
+  document.getElementById('provtable').innerHTML=rows.map(r=>`<tr data-p="${esc(r.p)}"><td>${esc(r.p)}</td><td>${fmt(r.pv)}</td><td>${fmt(r.br)}</td><td>${fmt(r.v)}</td><td>${Math.round(r.pct)}%</td></tr>`).join('');
+  document.getElementById('provtable').onclick=e=>{const r=e.target.closest('tr');if(!r)return;state.prov=state.prov===r.dataset.p?'':r.dataset.p;render(true);};
+
+  // ---- CSV
+  document.getElementById('csv').onclick=()=>{
+    const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+    const lines=[['naam','kanaal','straat','postcode','gemeente','provincie','merken','telefoon','website','lat','lng'].join(';')]
+      .concat(current.map(o=>[o.name,CH[o.ch],o.street,o.pc,o.city,o.prov,o.brands.join(', '),o.tel,o.web,o.lat,o.lng].map(q).join(';')));
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}));a.download='kantoren_selectie.csv';a.click();URL.revokeObjectURL(a.href);
+  };
+
+  document.getElementById('srcnote').innerHTML = 'Bron: publieke kantoorzoekers van de verzekeraars'+(META.generated?' (opgehaald '+esc(META.generated.split('-').reverse().join('/'))+')':'')+
+    '; bankkantoren BNP Paribas Fortis, Fintro en Crelan uit OpenStreetMap. Een merk staat bij een kantoor als het kantoor in de zoeker van dat merk voorkomt; ontbreekt het, dan is dat geen bewijs dat het kantoor het merk niet verkoopt.';
+  if(!DATA.length) document.getElementById('map').insertAdjacentHTML('afterbegin','<p style="padding:20px">Geen data gevonden — controleer data/kantoren.js.</p>');
+  render();
+})();
+</script>
+</body>
+</html>

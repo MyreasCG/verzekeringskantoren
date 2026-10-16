@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dataherkomst — Distributieradar België</title>
+<style>
+  :root{--pv:#0B3B8C;--vivium:#C4007A;--warn:#F08A00;--ok:#1B7F4B;--bad:#B3261E;
+        --ink:#14213D;--muted:#5B6678;--line:#E2E6EC;--bg:#F5F7FA;--card:#fff;--soft:#EAF0FB}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:15px;line-height:1.55}
+  header{background:var(--pv);color:#fff;padding:26px 16px}
+  header .in,main{max-width:1060px;margin:0 auto}
+  header h1{margin:0 0 4px;font-size:26px;font-weight:600}
+  header p{margin:0;opacity:.85}
+  header a{color:#fff}
+  main{padding:8px 16px 60px}
+  h2{font-size:20px;margin:38px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--pv)}
+  h3{font-size:15.5px;margin:20px 0 4px}
+  p{margin:8px 0}
+  .lead{font-size:16.5px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .kpi b{display:block;font-size:24px;color:var(--pv);font-variant-numeric:tabular-nums;line-height:1.2}
+  .kpi span{font-size:12.5px;color:var(--muted)}
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:14px 0;counter-reset:s}
+  .step{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--pv);border-radius:10px;padding:12px 14px;counter-increment:s}
+  .step b::before{content:counter(s) ". ";color:var(--pv)}
+  .step b{display:block;margin-bottom:3px}
+  .step span{font-size:13px;color:var(--muted)}
+  .scroll{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;margin:12px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:760px}
+  th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--soft);font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  code{font-family:Consolas,"Cascadia Mono",monospace;font-size:12.5px;background:#EEF1F5;padding:1px 5px;border-radius:4px;word-break:break-all}
+  .tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:10px;background:#EEF1F5;white-space:nowrap}
+  .tag.one{background:#DDF3E6;color:var(--ok)} .tag.grid{background:#FFF0D6;color:#8A5200} .tag.sweep{background:#E8E4FA;color:#4B36A8}
+  .tag.own{background:var(--pv);color:#fff} .tag.viv{background:var(--vivium);color:#fff}
+  .box{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--pv);border-radius:0 10px 10px 0;padding:10px 14px;margin:10px 0}
+  .box.warn{border-left-color:var(--warn)} .box.bad{border-left-color:var(--bad)} .box.ok{border-left-color:var(--ok)}
+  .box b:first-child{display:block}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+  .bars{margin:12px 0}
+  .bar{display:grid;grid-template-columns:190px 1fr 62px;gap:10px;align-items:center;font-size:13.5px;margin:5px 0}
+  .bar i{display:block;height:14px;border-radius:4px;background:var(--pv)}
+  .bar span:last-child{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+  ul,ol{margin:6px 0;padding-left:22px} li{margin:3px 0}
+  .muted{color:var(--muted);font-size:13px}
+  @media(max-width:560px){.bar{grid-template-columns:120px 1fr 54px}header h1{font-size:21px}}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <h1>Hoe de data is opgehaald</h1>
+  <p>Dataherkomst van de <a href="index.html">Distributieradar België</a> (P&amp;V · Vivium) — ophaling van 4 oktober 2026</p>
+</div></header>
+<main>
+
+<p class="lead">De kaart is gebouwd op de <b>publieke kantoorzoekers van de verzekeraars zelf</b>. Vijf AI-agenten haalden die tegelijk uit; daarna voegde één script alles samen tot één lijst van kantoren met hun merken. Er is niets ingekocht, niets handmatig overgetypt en niets verzonnen: elk kantoor op de kaart komt uit een bron die hieronder staat.</p>
+
+<div class="kpis">
+  <div class="kpi"><b>7.771</b><span>kantoren op de kaart</span></div>
+  <div class="kpi"><b>13</b><span>bronnen uitgelezen</span></div>
+  <div class="kpi"><b>14.729</b><span>makelaarsrecords → 5.348 unieke kantoren</span></div>
+  <div class="kpi"><b>5</b><span>agenten in parallel</span></div>
+  <div class="kpi"><b>± 40 min</b><span>doorlooptijd ophaling</span></div>
+</div>
+
+<h2>De werkwijze in vijf stappen</h2>
+<div class="flow">
+  <div class="step"><b>Verkennen</b><span>Eerst OpenStreetMap geprobeerd als snelle basis. Dat bleek te dun: 7 P&amp;V-kantoren en 1 Vivium-makelaar. Dus naar de officiële zoekers.</span></div>
+  <div class="step"><b>Verdelen</b><span>De merken verdeeld over vijf agenten, elk met dezelfde opdracht, dezelfde regels en hetzelfde uitvoerformaat.</span></div>
+  <div class="step"><b>Uitlezen</b><span>Elke agent zocht achter de zoekpagina het adres waar de site zelf haar gegevens ophaalt, en las dat volledig uit.</span></div>
+  <div class="step"><b>Samenvoegen</b><span>Eén script (<code>data/build.py</code>) koppelt dezelfde makelaar uit verschillende zoekers aan elkaar en telt de merken op.</span></div>
+  <div class="step"><b>Controleren</b><span>Kaart, filters en zoekfunctie getest in de browser; totalen vergeleken met de bronbestanden.</span></div>
+</div>
+
+<h2>De bronnen, één voor één</h2>
+<p>Bijna elke kantoorzoeker haalt zijn gegevens op bij een achterliggend adres dat gewoon JSON of HTML teruggeeft. Er bleken drie soorten te bestaan, en dat bepaalt hoeveel werk een bron is:</p>
+<p>
+  <span class="tag one">alles in één keer</span> één aanvraag geeft de volledige lijst ·
+  <span class="tag grid">raster</span> de zoeker geeft enkel de dichtstbijzijnde kantoren, dus België wordt in een raster van punten afgelopen ·
+  <span class="tag sweep">zoekreeks</span> de zoeker werkt op naam of postcode, dus alle beginletters of postcodes worden afgelopen
+</p>
+
+<div class="scroll"><table>
+<thead><tr><th>Merk</th><th>Records</th><th>Soort</th><th>Aanvragen</th><th>Achterliggend adres</th><th>Bijzonderheden</th></tr></thead>
+<tbody>
+<tr><td><span class="tag own">P&amp;V</span></td><td class="n">162</td><td><span class="tag grid">raster</span></td><td class="n">369 + 162</td>
+  <td><code>POST pv.be/vind-een-pv-adviseur</code></td>
+  <td>Geeft alles binnen ± 20 km, zonder maximum. Raster van 17 × 21 punten. Eén record per adviseur; na samenvoegen per adres 158 kantoren.</td></tr>
+<tr><td><span class="tag viv">Vivium</span></td><td class="n">1.791</td><td><span class="tag grid">raster</span></td><td class="n">793</td>
+  <td><code>POST vivium.be/private-individuals/vind-een-makelaar</code></td>
+  <td>Geeft maximaal 30 makelaars binnen ± 22 km. Waar dat maximum bereikt werd, is het raster verfijnd. Steekproef van 90 extra punten gaf geen nieuwe makelaars.</td></tr>
+<tr><td>AG</td><td class="n">2.856</td><td><span class="tag one">alles in één keer</span></td><td class="n">± 125</td>
+  <td><code>iservices.aginsurance.be/…/BrokerInfo/api/v2/brokers/list</code></td>
+  <td>124 makelaars zonder naam in de lijst zijn apart opgevraagd. Bevat vermoedelijk enkel makelaars die zichtbaar wilden zijn.</td></tr>
+<tr><td>AXA</td><td class="n">3.820</td><td><span class="tag one">alles in één keer</span></td><td class="n">1</td>
+  <td><code>fo.axa.be/dltaws/POSList/100.json</code></td>
+  <td>Eén statisch bestand met alle verkooppunten, inclusief KBO-nummer.</td></tr>
+<tr><td>Baloise</td><td class="n">3.614</td><td><span class="tag grid">raster</span></td><td class="n">429</td>
+  <td><code>contact.baloise.be/api/brokersearch/brokers</code></td>
+  <td>Maximaal 50 makelaars binnen ± 35 km. Drie pogingen nodig: de eerste twee misten kantoren aan de grens. Gecontroleerd met 22 naamzoekopdrachten (624 makelaars, allemaal aanwezig).</td></tr>
+<tr><td>NN</td><td class="n">2.648</td><td><span class="tag one">alles in één keer</span></td><td class="n">1</td>
+  <td><code>api.brokerfinder.prod.nn.dukeandgrace.site/api/v1/public/broker/</code></td>
+  <td>Geen KBO-nummer in de bron; koppeling met andere merken gebeurt op adres en naam.</td></tr>
+<tr><td>KBC / CBC</td><td class="n">857</td><td><span class="tag one">alles in één keer</span></td><td class="n">± 6</td>
+  <td><code>kbc.be/X9Y-P/elasticsearch-service/api/v1/branches</code></td>
+  <td>437 verzekeringsagentschappen en 355 bankkantoren. Private banking en bedrijvenkantoren zijn niet op de kaart gezet.</td></tr>
+<tr><td>Belfius</td><td class="n">417</td><td><span class="tag one">alles in één keer</span></td><td class="n">1</td>
+  <td><code>belfius.be/webapps/api/atm-locator/GetAllLocations</code></td>
+  <td>1.303 locaties, waarvan 886 losse geldautomaten zijn weggelaten.</td></tr>
+<tr><td>DVV</td><td class="n">269</td><td><span class="tag sweep">zoekreeks</span></td><td class="n">270 of meer</td>
+  <td><code>dvv.be/bin/belins/search/consultant.query.json</code></td>
+  <td>Geeft maximaal 50 resultaten per zoekopdracht, dus alle beginletters van namen afgelopen. Totaal klopt met wat de zoeker zelf meldt.</td></tr>
+<tr><td>ING</td><td class="n">150</td><td><span class="tag one">alles in één keer</span></td><td class="n">± 150</td>
+  <td><code>api.www.ing.be/locator/offices</code></td>
+  <td>124 kantoren; 26 kasloketten niet op de kaart. Telefoon en openingsuren per kantoor apart opgevraagd.</td></tr>
+<tr><td>Ethias</td><td class="n">39</td><td><span class="tag sweep">zoekreeks</span></td><td class="n">± 400</td>
+  <td><code>ethias.be/part/nl/hulp-contact/kantoren-…/officelist.html</code></td>
+  <td>Geeft de vijf dichtstbijzijnde kantoren per postcode; alle postcodes in stappen van 25 afgelopen.</td></tr>
+<tr><td>FSMA-register</td><td class="n">4.456</td><td><span class="tag one">alles in één keer</span></td><td class="n">1</td>
+  <td><code>fsma.be/…/itp_mdm_intermediaries_in_insurance_NL.xlsx</code></td>
+  <td>Officiële lijst van alle Belgische verzekeringsmakelaars. Zonder merken of coördinaten, dus enkel gebruikt als controle: 3.624 van de 4.456 zijn teruggevonden.</td></tr>
+<tr><td>OpenStreetMap</td><td class="n">3.606</td><td><span class="tag one">alles in één keer</span></td><td class="n">1</td>
+  <td><code>overpass.kumi.systems/api/interpreter</code></td>
+  <td>Enkel gebruikt voor de bankkantoren van BNP Paribas Fortis, Fintro (AG) en Crelan (AXA): 646 punten. Kopie van mei 2026.</td></tr>
+</tbody></table></div>
+<p class="muted">Alle ruwe bronbestanden staan in de map <code>data/</code> als <code>src_&lt;merk&gt;.json</code>, elk met de bron-URL per record.</p>
+
+<h2>Spelregels voor de agenten</h2>
+<div class="cols">
+  <div class="box ok"><b>Wat ze moesten doen</b>
+    <ul><li>Hooguit drie aanvragen per seconde per site.</li>
+    <li>Enkel opslaan wat de bron teruggeeft; niets aanvullen of schatten.</li>
+    <li>Geen afbeeldingen downloaden, enkel links bewaren.</li>
+    <li>Allemaal hetzelfde formaat opleveren: naam, adres, coördinaten, telefoon, e-mail, website, ondernemingsnummer, merk, bron-URL.</li></ul></div>
+  <div class="box bad"><b>Wat ze niet mochten doen</b>
+    <ul><li>Geen beveiliging omzeilen: stoppen bij een captcha, botcontrole of login.</li>
+    <li>Geen andere bron in de plaats zetten als een zoeker onbereikbaar is; wel melden.</li>
+    <li>Geen certificaatfouten negeren.</li></ul></div>
+</div>
+
+<h2>Hoe de bronnen één lijst werden</h2>
+<p>Een makelaar staat in de zoeker van elk merk dat hij verkoopt, telkens met een iets andere schrijfwijze. Het script beschouwt twee records als hetzelfde kantoor in drie gevallen:</p>
+<ol>
+  <li><b>Zelfde ondernemingsnummer</b> (KBO) én zelfde postcode, zelfde adres of minder dan 300 meter van elkaar.</li>
+  <li><b>Zelfde adres</b> en een gelijkende naam, zolang de ondernemingsnummers elkaar niet tegenspreken.</li>
+  <li><b>Minder dan 60 meter van elkaar</b> en een gelijkende naam; dit vangt Nederlandse en Franse straatnamen op.</li>
+</ol>
+<p>Twee records met een verschillend ondernemingsnummer worden nooit samengevoegd, ook niet op hetzelfde adres. Zo werden 14.729 records 5.348 makelaarskantoren, waarvan 544 met vijf merken en 1.711 met één.</p>
+<p>Daarna: hoofdletternamen leesbaar gemaakt, de provincie afgeleid uit de postcode, en dubbele vermeldingen van hetzelfde merk op hetzelfde adres verwijderd. Tien kantoren zonder coördinaten staan op het middelpunt van hun postcode; één kantoor zonder bruikbaar adres is weggelaten.</p>
+
+<h2>Wat niet lukte</h2>
+<div class="box bad"><b>Allianz: geblokkeerd</b>De makelaarszoeker op allianz.be zit achter een botcontrole van Cloudflare. Die is bewust niet omzeild. Allianz ontbreekt dus volledig op de kaart.</div>
+<div class="box warn"><b>Brocom: onbereikbaar</b>De zoeker van de makelaarsfederaties (makelaarinverzekeringen.be) had op 4 oktober een verlopen beveiligingscertificaat aan hun kant. Deze bron geeft mogelijk ook merken per makelaar en is het proberen waard zodra ze weer werkt.</div>
+<div class="box warn"><b>OpenStreetMap: verouderde kopie</b>De hoofdserver was overbelast; de gebruikte reserveserver had gegevens van mei 2026. Dit raakt enkel de 646 bankkantoren van BNP Paribas Fortis, Fintro en Crelan.</div>
+<div class="box warn"><b>Geen browser beschikbaar voor de agenten</b>De gedeelde Chrome-sessie was bezet, waardoor geen enkele agent een pagina in een echte browser kon bekijken. Alles is met rechtstreekse aanvragen gedaan.</div>
+<div class="box"><b>Grenzen van de bronnen zelf</b>Een merk staat bij een kantoor als het kantoor in de zoeker van dat merk voorkomt. Ontbreekt het, dan bewijst dat niet dat het kantoor het merk niet verkoopt. 832 makelaars uit het FSMA-register staan in geen enkele zoeker en dus niet op de kaart.</div>
+
+<h2>Wat de parallelle aanpak opleverde</h2>
+<p>De vijf agenten werkten samen ongeveer twee uur, maar omdat ze tegelijk liepen was alles na 40 minuten binnen. De langste agent bepaalt de doorlooptijd.</p>
+<div class="bars">
+  <div class="bar"><span>P&amp;V + Vivium</span><i style="width:100%"></i><span>40 min</span></div>
+  <div class="bar"><span>Baloise + Allianz + NN</span><i style="width:77%"></i><span>31 min</span></div>
+  <div class="bar"><span>KBC + ING + registers</span><i style="width:62%"></i><span>25 min</span></div>
+  <div class="bar"><span>DVV + Belfius + Ethias</span><i style="width:50%"></i><span>20 min</span></div>
+  <div class="bar"><span>AG + AXA</span><i style="width:12%"></i><span>5 min</span></div>
+</div>
+<p class="muted">Samen verbruikten de agenten ongeveer 630.000 tokens en deden ze naar schatting 2.700 aanvragen bij de bronnen.</p>
+
+<h2>Advies: zo doe je dit beter met parallelle agenten</h2>
+<p>De aanpak werkte, maar was een eerste worp. Voor een herhaalbare of grotere versie zijn dit de aanbevelingen, in volgorde van belang.</p>
+
+<h3>1. Eén agent per bron, niet per groepje</h3>
+<p>Nu deelden twee of drie merken een agent, en die werkte ze na elkaar af. De snelle AXA-bron (één aanvraag) zat daardoor niet in de weg, maar Vivium (793 aanvragen) hield P&amp;V op en Baloise hield NN op. Met dertien agenten, één per bron, zakt de doorlooptijd naar die van de traagste bron: ongeveer 25 minuten.</p>
+
+<h3>2. Splits verkennen en oogsten</h3>
+<p>Het dure denkwerk is het vinden van het achterliggende adres; het uitlezen zelf is routine. Laat eerst per bron een korte verkenner lopen die drie dingen teruggeeft: het adres, de soort (alles in één keer, raster of zoekreeks) en eventuele maxima. Een bron van de eerste soort is dan meteen klaar; alleen de rastersoort heeft een tweede, langere stap nodig.</p>
+
+<h3>3. Eén gedeeld uitleesscript voor rasters</h3>
+<p>Drie agenten hebben elk apart uitgevonden hoe je een raster verfijnt waar de zoeker zijn maximum bereikt. Baloise had daar drie pogingen voor nodig. Geef de oogst-agenten één getest script mee dat dit doet, met de straal en het maximum als instelling.</p>
+
+<h3>4. Leg het uitvoerformaat strakker vast</h3>
+<ul>
+  <li>Een apart veld voor het <b>KBO-nummer</b> en een apart veld voor het FSMA-nummer. Nu kwam het KBO-nummer in het veld <code>fsma</code> terecht, in drie verschillende schrijfwijzen.</li>
+  <li>Een vast veld voor het <b>soort kantoor</b> (makelaar, exclusief agent, bankkantoor, eigen kantoor).</li>
+  <li>Een kort verslag per bron in vaste vorm: aantal records, aantal aanvragen, volledigheidscontrole, wat ontbreekt.</li>
+</ul>
+
+<h3>5. Laat agenten een script opleveren, niet alleen data</h3>
+<p>De agenten leverden nu enkel de bestanden op. Voor een maandelijkse verversing moet alles opnieuw uitgezocht worden. Vraag per bron ook een script <code>fetch_&lt;merk&gt;.py</code>; dan kost een verversing geen agenten meer, alleen rekentijd, en zie je meteen wanneer een bron van vorm verandert.</p>
+
+<h3>6. Een onafhankelijke controle-agent per bron</h3>
+<p>De agent die uitleest, controleert nu ook zichzelf. Zet er een tweede naast die het resultaat niet gemaakt heeft en het probeert onderuit te halen: twintig willekeurige gemeenten opzoeken in de echte zoeker en nagaan of elk kantoor in het bestand zit, en omgekeerd. Dat had de dubbele KBC-vermelding en het lage P&amp;V-aantal vroeger aan het licht gebracht.</p>
+
+<h3>7. Nooit twee agenten op dezelfde site</h3>
+<p>De limiet van drie aanvragen per seconde geldt per site, niet per agent. Verdeel dus per domein. Geef agenten die een browser nodig hebben elk een eigen, afgeschermd browserprofiel; één gedeeld profiel blokkeert zodra de eerste het opent.</p>
+
+<h3>8. Houd het samenvoegen op één plek</h3>
+<p>Ophalen kan parallel, samenvoegen niet: de koppelregels moeten voor alle bronnen dezelfde zijn. Laat dat één script blijven dat na de agenten draait.</p>
+
+<h3>9. Geblokkeerde bronnen: vragen, niet forceren</h3>
+<p>Voor Allianz is de juiste weg een officiële: de lijst opvragen, of ze eenmalig handmatig in een gewone browser bekijken. Voor de demo is het eerlijker het merk als "ontbreekt" te tonen dan een onvolledige lijst.</p>
+
+<h3>Hoe dat er in Claude Code uitziet</h3>
+<div class="box">
+  <b>Als workflow in drie fasen</b>
+  Claude Code kan een vaste keten van agenten uitvoeren als je er uitdrukkelijk om vraagt ("gebruik een workflow"). Voor deze opdracht:
+  <ol>
+    <li><b>Verken</b> — dertien agenten tegelijk, één per bron, die elk het achterliggende adres en de soort teruggeven.</li>
+    <li><b>Oogst</b> — per bron start het uitlezen zodra de verkenning van díé bron klaar is, zonder op de andere te wachten.</li>
+    <li><b>Controleer</b> — per bron een onafhankelijke agent met de steekproef uit punt 6.</li>
+  </ol>
+  Daarna draait <code>build.py</code>. Reken op ruwweg 25 tot 40 agenten en een verbruik van één tot anderhalf miljoen tokens voor een volledige eerste run; een verversing met de opgeleverde scripts kost daarna bijna niets.
+</div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Alleen de bestanden die de website nodig heeft gaan naar GitHub
+/*
+!/.gitignore
+!/.nojekyll
+!/index.html
+!/data-herkomst.html
+!/data/
+/data/*
+!/data/kantoren.js
