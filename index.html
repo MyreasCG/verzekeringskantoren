@@ -73,6 +73,44 @@
 </style>
 </head>
 <body>
+<!-- WACHTWOORDGATE (client-side; houdt toevallige bezoekers tegen, geen echte beveiliging) -->
+<style>
+  #gate{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:16px;background:#0B3B8C;font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif}
+  #gate .gt{color:#fff;font-size:22px;font-weight:600;text-align:center}
+  #gate .gt small{display:block;font-size:13px;font-weight:400;opacity:.8;margin-top:4px}
+  #gate form{background:#fff;border-radius:12px;padding:26px;width:100%;max-width:340px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  #gate label{display:block;font-size:13px;color:#5B6678;margin-bottom:8px}
+  #gate input{width:100%;padding:11px 12px;border:1px solid #E2E6EC;border-radius:8px;font-size:15px;outline:none}
+  #gate input:focus{border-color:#0B3B8C}
+  #gate input.err{border-color:#B3261E}
+  #gate button{width:100%;margin-top:12px;padding:11px;border:0;border-radius:8px;background:#F08A00;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+  #gate .msg{min-height:18px;margin-top:8px;font-size:12px;color:#B3261E}
+</style>
+<div id="gate">
+  <div class="gt">Distributieradar België<small>Beveiligde pagina</small></div>
+  <form id="gateForm" autocomplete="off">
+    <label for="gatePw">Wachtwoord</label>
+    <input type="password" id="gatePw" autofocus>
+    <button type="submit">Toegang</button>
+    <div class="msg" id="gateMsg"></div>
+  </form>
+</div>
+<script>
+(function(){
+  var HASH='3a53c67390211fedb44cfcfe161f9a15c004cfc9aeee1f08ccdc5c8feeb97619', KEY='vk-auth';
+  var gate=document.getElementById('gate');
+  function ok(){try{return sessionStorage.getItem(KEY)===HASH}catch(e){return false}}
+  if(ok()){gate.remove();return}
+  document.getElementById('gateForm').addEventListener('submit',async function(e){
+    e.preventDefault();
+    var inp=document.getElementById('gatePw');
+    var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(inp.value));
+    var h=Array.from(new Uint8Array(buf)).map(function(x){return x.toString(16).padStart(2,'0')}).join('');
+    if(h===HASH){try{sessionStorage.setItem(KEY,HASH)}catch(e){}gate.remove();window.dispatchEvent(new Event('resize'))}
+    else{inp.classList.add('err');inp.value='';document.getElementById('gateMsg').textContent='Onjuist wachtwoord.'}
+  });
+})();
+</script>
 <header>
   <h1>Distributieradar België<small>Verzekeringskantoren en hun merken — standpunt P&amp;V Groep (P&amp;V · Vivium)</small></h1>
   <div class="kpis">
